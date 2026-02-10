@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>see location to find</title>
+</head>
+<body>
+    <h1> Heat Maps for complaints</h1>
+    <button onclick="sendLocation()">Report Zone</button>
+    
+    <div style="margin-top: 20px;">
+        <iframe id="mapFrame" src="/get_map" width="100%" height="500px"></iframe>
+    </div>
+
+    <script>
+    function sendLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                fetch('/report_complaint', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+                }).then(() => {
+                    document.getElementById('mapFrame').src = "/get_map?v=" + new Date().getTime();
+                });
+            });
+        }
+    }
+    </script>
+</body>
+</html>
