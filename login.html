@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus-Care | Secure Access</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,700;1,700&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        :root {
+            --outlive-orange: #577ed9;
+            --outlive-teal: #4A7C77;
+            --outlive-sand: #e3f2f8;
+            --outlive-ink: #2D2D2D;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--outlive-sand); 
+            background-image: radial-gradient(var(--outlive-ink) 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            color: var(--outlive-ink);
+        }
+
+        .serif { font-family: 'Lora', serif; }
+
+        /* Custom Neo-Brutalist Components */
+        .login-card {
+            background: white;
+            border: 3px solid var(--outlive-ink);
+            border-radius: 40px;
+            box-shadow: 12px 12px 0px var(--outlive-ink);
+        }
+
+        .toggle-container {
+            background: #E5E7EB;
+            border: 2.5px solid var(--outlive-ink);
+            border-radius: 50px;
+            position: relative;
+            display: flex;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .toggle-option {
+            flex: 1;
+            padding: 14px 0;
+            text-align: center;
+            font-weight: 800;
+            z-index: 10;
+            transition: color 0.3s;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: var(--outlive-ink);
+            border-radius: 45px;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            left: 0;
+        }
+
+        .active-text { color: white; }
+
+        .input-field {
+            border: 2px solid var(--outlive-ink);
+            border-radius: 15px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-field:focus {
+            border-color: var(--outlive-orange);
+            box-shadow: 4px 4px 0px var(--outlive-orange);
+            outline: none;
+            transform: translate(-2px, -2px);
+        }
+
+        .btn-primary {
+            background: var(--outlive-ink);
+            box-shadow: 6px 6px 0px var(--outlive-orange);
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--outlive-orange);
+        }
+
+        .btn-google {
+            border: 3px solid var(--outlive-ink);
+            transition: all 0.2s;
+        }
+
+        .btn-google:hover {
+            transform: translate(3px, 3px);
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="w-full p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="index.html" class="group flex items-center gap-3 font-bold text-lg transition-all hover:text-[--outlive-orange]">
+                <div class="bg-[--outlive-ink] p-2 rounded-full text-white group-hover:bg-[--outlive-orange] transition-colors">
+                    <i data-lucide="move-left" class="w-5 h-5"></i>
+                </div>
+                <span class="serif">Campus-Care</span>
+            </a>
+            <div class="flex items-center gap-2 opacity-50">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                <span class="text-xs font-black uppercase tracking-tighter">Safe Space Encrypted</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="max-w-md w-full">
+            
+            <div class="mb-10 text-center space-y-4">
+                <div class="inline-flex bg-white border-2 border-[--outlive-ink] px-4 py-2 rounded-2xl shadow-sm items-center gap-3 animate-bounce">
+                    <i data-lucide="heart" class="w-5 h-5 text-[--outlive-orange] fill-[--outlive-orange]"></i>
+                    <span class="text-sm font-bold">You are not alone.</span>
+                </div>
+                <div>
+                    <h1 class="serif text-5xl font-black mb-2 leading-tight">Welcome Back</h1>
+                    <p class="text-[--outlive-teal] font-bold">Your voice really matters.</p>
+                </div>
+            </div>
+
+            <div class="login-card p-8 md:p-10 relative">
+                <div class="toggle-container mb-10" id="userToggle" onclick="toggleUserType()">
+                    <div id="slider" class="toggle-slider"></div>
+                    <div id="studentLabel" class="toggle-option active-text">Student</div>
+                    <div id="orgLabel" class="toggle-option">Organisation</div>
+                </div>
+
+                <form id="authForm" onsubmit="handleLogin(event)" class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ml-1 opacity-60">Identity</label>
+                        <div class="relative group">
+                            <span class="absolute left-4 top-3.5 opacity-40 group-focus-within:opacity-100 transition-opacity">
+                                <i data-lucide="user" class="w-5 h-5"></i>
+                            </span>
+                            <input type="text" placeholder="Username or Email" required
+                                class="input-field w-full py-4 pl-12 pr-4 font-bold bg-gray-50/50">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 ml-1 opacity-60">Access Key</label>
+                        <div class="relative group">
+                            <span class="absolute left-4 top-3.5 opacity-40 group-focus-within:opacity-100 transition-opacity">
+                                <i data-lucide="lock" class="w-5 h-5"></i>
+                            </span>
+                            <input type="password" placeholder="••••••••" required
+                                class="input-field w-full py-4 pl-12 pr-4 font-bold bg-gray-50/50">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 px-1">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="rem" class="w-4 h-4 accent-[--outlive-ink] cursor-pointer">
+                            <label for="rem" class="text-xs cursor-pointer font-bold opacity-70 select-none">Stay logged in</label>
+                        </div>
+                        <a href="#" class="text-[10px] text-[--outlive-orange] font-black hover:underline uppercase tracking-widest">Forgot?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full text-white py-5 rounded-[22px] font-black text-lg flex items-center justify-center gap-3 uppercase tracking-tighter">
+                        <span>Enter Safe Space</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-12 text-center space-y-6">
+                <div class="relative my-8">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t-2 border-[--outlive-ink] opacity-10"></div>
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase tracking-widest">
+                        <span class="bg-[--outlive-sand] px-4 font-black opacity-40">Verified Identity</span>
+                    </div>
+                </div>
+
+                <button type="button" id="googleBtn" onclick="handleGoogleLogin()"
+                    class="btn-google w-full bg-white text-[--outlive-ink] py-4 rounded-[22px] font-black text-lg flex items-center justify-center gap-3 shadow-[6px_6px_0px_rgba(0,0,0,0.05)]">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span id="googleBtnText">Sign in with Google</span>
+                </button>
+                
+                <p class="text-xs leading-relaxed opacity-50 italic px-8 pt-4 border-t border-[--outlive-ink]/10">
+                    "Your life is important to us and the world. Every storm passes, and we are here to hold the umbrella."
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Google Config
+        const CLIENT_ID = '403300956131-35ggfkb2dldkjn4r9pqn0jg97aot7p3i.apps.googleusercontent.com';
+        let isOrg = false;
+        let tokenClient;
+
+        // On Load initialization
+        window.onload = function() {
+            if(window.google) {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                    callback: async (resp) => {
+                        if (resp.access_token) await fetchUser(resp.access_token);
+                    },
+                });
+            }
+        };
+
+        function handleGoogleLogin() {
+            if (!tokenClient) return alert("Service loading...");
+            tokenClient.requestAccessToken();
+        }
+
+        async function fetchUser(token) {
+            document.getElementById('googleBtnText').innerText = "Verifying...";
+            try {
+                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const user = await res.json();
+                alert(`Welcome, ${user.name}!`);
+                window.location.href = 'student.html';
+            } catch (e) {
+                alert("Login failed.");
+                document.getElementById('googleBtnText').innerText = "Sign in with Google";
+            }
+        }
+
+        // UI Toggles
+        function toggleUserType() {
+            isOrg = !isOrg;
+            const slider = document.getElementById('slider');
+            const studentLabel = document.getElementById('studentLabel');
+            const orgLabel = document.getElementById('orgLabel');
+
+            slider.style.left = isOrg ? '50%' : '0';
+            if(isOrg) {
+                orgLabel.classList.add('active-text');
+                studentLabel.classList.remove('active-text');
+            } else {
+                studentLabel.classList.add('active-text');
+                orgLabel.classList.remove('active-text');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerHTML = 'Validating...';
+            setTimeout(() => {
+                window.location.href = 'student.html';
+            }, 800);
+        }
+    </script>
+</body>
+</html>
