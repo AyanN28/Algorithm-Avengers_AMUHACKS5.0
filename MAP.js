@@ -1,57 +1,26 @@
 function captureAndSendLocation() {
-    
-    if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
-        return;
-    }
+    if (navigator.geolocation) {
+        // This triggers the "Allow" popup
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
 
-    
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-
-            console.log(`Location captured: ${userLat}, ${userLng}`);
-
-            
+            // Send the real location to your Flask app
             fetch('/report_complaint', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    lat: userLat,
-                    lng: userLng,
-                    weight: 1 // You can increase this for "High Complaint" areas
-                }),
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ lat: lat, lng: lng })
             })
             .then(response => {
                 if (response.ok) {
-                    alert("Location successfully reported to the Heat Map!");
-                    // Optional: Reload the iframe or page to show the new point
-                    location.reload(); 
-                } else {
-                    alert("Server error. Could not save location.");
+                    // Update the iframe without refreshing the whole page
+                    const mapFrame = document.getElementById('mapFrame');
+                    mapFrame.src = `/get_map?lat=${lat}&lng=${lng}&v=${new Date().getTime()}`;
+                    alert("Location added to Heatmap!");
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("Failed to connect to the server.");
             });
-        },
-        (error) => {
-            // Handle cases where user denies permission or GPS is off
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    alert("Please allow location access to report a zone.");
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    alert("Location information is unavailable.");
-                    break;
-                case error.TIMEOUT:
-                    alert("The request to get user location timed out.");
-                    break;
-            }
-        }
-    );
+        }, (error) => {
+            alert("Location access denied. Please allow location to use this feature.");
+        });
+    }
 }

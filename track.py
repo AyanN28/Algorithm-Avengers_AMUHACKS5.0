@@ -12,7 +12,7 @@ Base = declarative_base()
 app = FastAPI()
 
 
-# -------------------- Model --------------------
+
 class Complaint(Base):
     __tablename__ = "complaints"
 
@@ -38,7 +38,7 @@ def add_complaint(data: dict):
     return complaint
 
 
-# -------------------- Trend Tracking --------------------
+
 @app.get("/trends")
 def get_trends(period: str = "day"):
     db = SessionLocal()
@@ -69,5 +69,3 @@ def get_trends(period: str = "day"):
     ]
 
 
-# -------------------- Run --------------------
-# uvicorn main:app --reload
