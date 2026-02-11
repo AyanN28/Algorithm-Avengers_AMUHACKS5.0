@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus-Care | Student Support Portal</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --soft-blue: #e0f2fe;
+            --primary-blue: #0ea5e9;
+            --dark-blue: #0369a1;
+            --sos-red: #ef4444;
+            --text-gray: #475569;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--soft-blue); color: var(--text-gray); scroll-behavior: smooth; }
+
+        /* --- NAVIGATION --- */
+        nav {
+            background: var(--white);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .logo { font-weight: 700; font-size: 1.4rem; color: var(--primary-blue); display: flex; align-items: center; gap: 10px; }
+        .nav-links { display: flex; align-items: center; gap: 20px; }
+        .nav-links a { text-decoration: none; color: var(--text-gray); font-weight: 600; font-size: 0.9rem; transition: 0.3s; }
+        .nav-links a:hover { color: var(--primary-blue); }
+
+        /* --- RED BLINKING SOS --- */
+        .sos-btn {
+            background: var(--sos-red);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: blink 1.5s infinite;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+        @keyframes blink {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- HERO & SELECTION --- */
+        .hero { padding: 60px 5%; text-align: center; }
+        .institute-select {
+            padding: 15px 25px;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 12px;
+            border: 2px solid var(--primary-blue);
+            font-size: 1rem;
+            outline: none;
+            margin-bottom: 20px;
+        }
+
+        /* --- INSTITUTE IMAGE SECTION --- */
+        #institute-section {
+            display: none; /* Hidden until institute is selected */
+            margin: 20px 5%;
+            height: 400px;
+            border-radius: 20px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .img-overlay {
+            position: absolute; bottom: 0; width: 100%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            padding: 40px; border-radius: 0 0 20px 20px; color: white;
+        }
+
+        /* --- SECTIONS --- */
+        section { padding: 80px 10%; margin: 20px 5%; background: var(--white); border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        h2 { margin-bottom: 30px; color: var(--dark-blue); font-size: 1.8rem; border-left: 5px solid var(--primary-blue); padding-left: 15px; }
+
+        /* --- HEATMAP PLACEHOLDER --- */
+        .heatmap-box {
+            width: 100%; height: 350px; background: #e2e8f0; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+        }
+        .heat-circle {
+            position: absolute; border-radius: 50%; background: rgba(239, 68, 68, 0.4); filter: blur(20px);
+        }
+
+        /* --- COMPLAINT FORM --- */
+        .form-group { margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; }
+        .submit-btn { background: var(--primary-blue); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        /* --- REVIEW CARDS --- */
+        .review-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .review-card { padding: 20px; border: 1px solid #f1f5f9; border-radius: 12px; background: #fafafa; }
+        .stars { color: #fbbf24; margin-bottom: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Campus-Care</div>
+        <div class="nav-links">
+            <a href="#complaint">Complaint</a>
+            <a href="#track">Track</a>
+            <a href="#heatmap">Heatmap</a>
+            <a href="#reviews">Reviews</a>
+            <button class="sos-btn" onclick="handleSOS()"><i class="fas fa-phone-alt"></i> SOS</button>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>Welcome to Student Support</h1>
+        <p style="margin-bottom: 30px;">Your safety and feedback drive campus improvement.</p>
+        
+        <select class="institute-select" id="institute-dropdown" onchange="updateInstitute()">
+            <option value="">-- Select Your Institute --</option>
+            <option value="inst1" data-img="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1000&q=80">ABC University</option>
+            <option value="inst2" data-img="https://mywbut.com/logo_pic/14a2ef51f36311731eeb7ad3dbb0b0ca.jpg">Government College of Engineering and Leather Technology
+</option>
+            <option value="inst3" data-img="image/XYZ IMAGE.png">XYZ Engineering College</option>
+        </select>
+    </header>
+
+    <div id="institute-section">
+        <div class="img-overlay">
+            <h2 id="inst-name" style="color: white; border: none;">Institute Dashboard</h2>
+            <p id="inst-loc">Select an institute to see live campus data.</p>
+        </div>
+    </div>
+
+    <section id="complaint">
+        <h2>Lodge Anonymous Complaint</h2>
+        <div class="form-group">
+            <label>Category</label>
+            <select style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1;">
+                <option>Infrastructure (Water/Electricity)</option>
+                <option>Women's Safety / Harassment</option>
+                <option>Academic Quality</option>
+                <option>Hostel Facilities</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea placeholder="Tell us what happened..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="alert('Grievance Submitted Anonymously!')">Submit Report</button>
+    </section>
+
+    <section id="heatmap">
+        <h2>Campus Complaint Heatmap</h2>
+        <p style="margin-bottom: 15px;">Visualizing high-complaint zones to alert campus security and administration.</p>
+        <div class="heatmap-box">
+            <div class="heat-circle" style="width: 150px; height: 150px; top: 20%; left: 30%;"></div>
+            <div class="heat-circle" style="width: 100px; height: 100px; bottom: 10%; right: 20%; background: rgba(245, 158, 11, 0.4);"></div>
+            <p><strong>[Live Map Integration: Area A - High Safety Reports]</strong></p>
+        </div>
+    </section>
+
+    <section id="reviews">
+        <h2>Student Trust Reviews</h2>
+        <div class="review-grid">
+            <div class="review-card">
+                <div class="stars">★★★★★</div>
+                <p>"The SOS button response was incredible. Security arrived in 3 minutes."</p>
+                <small>- Anonymous Student</small>
+            </div>
+            <div class="review-card">
+                <div class="stars">★★★★☆</div>
+                <p>"Infrastructure complaints are finally being heard. Water issue resolved in 2 days."</p>
+                <small>- Anonymous Student</small>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function updateInstitute() {
+            const dropdown = document.getElementById('institute-dropdown');
+            const section = document.getElementById('institute-section');
+            const instName = document.getElementById('inst-name');
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
+
+            if (selectedOption.value !== "") {
+                const imgUrl = selectedOption.getAttribute('data-img');
+                section.style.display = "block";
+                section.style.backgroundImage = `url('${imgUrl}')`;
+                instName.innerText = selectedOption.text;
+                // Scroll smoothly to the image section
+                section.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                section.style.display = "none";
+            }
+        }
+
+        function handleSOS() {
+            if (confirm("🚨 TRIGGER SOS ALERT?\n\nThis will send your location to the Campus Safety Cell and local authorities immediately.")) {
+                alert("SUCCESS: SOS Active. Help is on the way. Stay in a well-lit area.");
+            }
+        }
+    </script>
+</body>
+</html>
