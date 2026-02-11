@@ -1,67 +1,90 @@
-import express, { json } from 'express';
-import { createServer } from 'http';
-import { Server } from "socket.io";
+import express from 'express';
 import cors from 'cors';
 
 const app = express();
-app.use(cors());
-app.use(json());
+const PORT = 3000;
 
-const server = createServer(app);
+// --- MIDDLEWARE ---
+app.use(cors()); // Allow frontend to connect
+app.use(express.json()); // Built-in replacement for body-parser
 
-// Initialize Socket.io (The Real-Time Engine)
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5500", // Allow the React frontend
-    methods: ["GET", "POST"]
-  }
+// --- MOCK DATABASE ---
+// Stores complaints in memory (RAM) while the server is running
+const complaintsDB = [
+    { lat: 22.5726, lng: 88.3639, category: "Infrastructure", description: "Broken pipe near library" },
+    { lat: 22.5730, lng: 88.3640, category: "Safety", description: "Streetlight flickering" }
+];
+
+// --- API 1: Receive Complaint ---
+app.post('/report_complaint', (req, res) => {
+    const { lat, lng, category, description } = req.body;
+    
+    // Validation
+    if(!lat || !lng) {
+        return res.status(400).json({ status: "error", message: "Missing GPS data" });
+    }
+
+    const newComplaint = {
+        id: Date.now(),
+        lat, 
+        lng, 
+        category, 
+        description,
+        timestamp: new Date().toISOString()
+    };
+
+    complaintsDB.push(newComplaint);
+    console.log(`📝 New Complaint: ${category} at [${lat}, ${lng}]`);
+
+    res.json({ status: "success", id: newComplaint.id });
 });
 
-// Mock Database (In production, this would be PostgreSQL)
-let complaints = {
-  "123": { id: "123", status: "Open", issue: "Broken Streetlight Zone A" }
-};
+// --- API 2: Serve the Heatmap ---
+app.get('/map', (req, res) => {
+    // Generate HTML with the map and inject current data
+    const mapHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>body { margin: 0; } #map { height: 100vh; width: 100%; }</style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            // Initialize Map
+            var map = L.map('map').setView([22.5726, 88.3639], 15);
 
-// --- SOCKET CONNECTION HANDLER ---
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-  // 1. Client joins a "room" specific to a complaint ID
-  // This ensures they only get updates for the complaint they are viewing
-  socket.on('track_complaint', (complaintId) => {
-    socket.join(complaintId);
-    console.log(`Socket ${socket.id} is tracking complaint ${complaintId}`);
-  });
+            // Inject Data from Backend
+            var complaints = ${JSON.stringify(complaintsDB)};
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
+            // Loop through complaints and add markers
+            complaints.forEach(function(c) {
+                // Color logic: Red for Safety, Blue for others
+                var color = (c.category && c.category.includes('Safety')) ? 'red' : 'blue';
+                
+                L.circleMarker([c.lat, c.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.6,
+                    radius: 12
+                }).addTo(map)
+                .bindPopup("<b>" + c.category + "</b><br>" + c.description);
+            });
+        </script>
+    </body>
+    </html>
+    `;
+
+    res.send(mapHTML);
 });
 
-// --- ADMIN API TO UPDATE STATUS ---
-// This simulates an Admin changing the status in their dashboard
-app.put('/api/complaint/:id/status', (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body; // e.g., "In-Progress" or "Resolved"
-
-  if (!complaints[id]) {
-    return res.status(404).json({ error: "Complaint not found" });
-  }
-
-  // 2. Update Database
-  complaints[id].status = status;
-
-  // 3. REAL-TIME TRIGGER: Emit event to the specific room
-  // This pushes the data immediately to the frontend
-  io.to(id).emit('status_update', {
-    complaintId: id,
-    newStatus: status,
-    timestamp: new Date().toISOString()
-  });
-
-  res.json({ message: "Status updated and notification sent", currentData: complaints[id] });
-});
-
-server.listen(3001, () => {
-  console.log('REAL-TIME SERVER running on port 3001');
+// --- START SERVER ---
+app.listen(PORT, () => {
+    console.log(`🚀 Campus-Care Backend running on http://localhost:${PORT}`);
 });
