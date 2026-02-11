@@ -10,7 +10,8 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__,
+             template_folder='.')
 
 @app.route('/')
 def home():
@@ -33,37 +34,38 @@ def report():
 
 @app.route('/get_map')
 def get_map():
-    # 2. Fetch ALL real complaints from Firebase
-    docs = db.collection('complaints').stream()
-    real_data = [[d.to_dict()['lat'], d.to_dict()['lng'], 1] for d in docs]
+    try:
+        docs = db.collection('complaints').stream()
+        real_data = []
+        for d in docs:
+            item = d.to_dict()
+            if 'lat' in item and 'lng' in item:
+                real_data.append([float(item['lat']), float(item['lng']), 1])
 
-    # 3. DYNAMIC CENTERING: Use coordinates sent from the user's browser
-    # We remove the hardcoded Campus coordinates here.
-    user_lat = request.args.get('lat', type=float)
-    user_lng = request.args.get('lng', type=float)
+        # Get coordinates from JS
+        user_lat = request.args.get('lat', type=float)
+        user_lng = request.args.get('lng', type=float)
 
-    # If the user hasn't shared location yet, we show a default view
-    if user_lat is None or user_lng is None:
-        # Default view (Kolkata region) until user allows GPS
-        m = folium.Map(location=[22.5726, 88.3639], zoom_start=12)
-    else:
-        # Map centers EXACTLY on the user
-        m = folium.Map(location=[user_lat, user_lng], zoom_start=16)
-        # Add a Blue Marker to show where the user is currently on campus
-        folium.Marker(
-            [user_lat, user_lng], 
-            popup="You are here", 
-            icon=folium.Icon(color='blue', icon='user', prefix='fa')
-        ).add_to(m)
+        # Center map
+        center = [user_lat, user_lng] if user_lat else [22.5726, 88.3639]
+        m = folium.Map(location=center, zoom_start=15)
 
-    # Add the global heatmap of all campus issues
-    HeatMap(real_data, radius=25, blur=15).add_to(m)
-    
-    return m._repr_html_()
-
+        # ONLY add HeatMap if real_data has points
+        if len(real_data) > 0:
+            HeatMap(real_data, radius=25, blur=15).add_to(m)
+        else:
+            # Add a single fake point so the map doesn't look broken during testing
+            print("No data in Firebase yet. Showing empty map.")
+        
+            
+        return render_template('map.html')
+    except Exception as e:
+        return f"Database not ready: {str(e)}", 500
 @app.route('/map.js')
 def serve_js():
     return send_from_directory('.', 'map.js')
-
+@app.route('/student')
+def student():
+    return render_template('student.html')
 if __name__ == '__main__':
     app.run(debug=True)

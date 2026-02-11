@@ -1061,9 +1061,9 @@
         </ul>
         
         <div class="nav-buttons">
-    <a href="login.html" class="btn-outline" id="loginBtn">
-        <i class="fas fa-sign-in-alt"></i> Login
-    </a>
+    <a href="/login" class="btn-outline">
+    <i class="fas fa-sign-in-alt"></i> Login
+</a>
 
     <button id="theme-toggle" aria-label="Toggle theme">
         <i class="fas fa-moon"></i>
@@ -1121,8 +1121,8 @@
             </div>
         </div>
         <div class="hero-image">
-            <img src="Campus-Care logo.png" alt="Campus Care Illustration">
-        </div>
+    <img src="{{ url_for('static', filename='Campus-Care logo.png') }}" alt="Campus Care Illustration">
+</div>
     </section>
 
     <!-- Features Section -->
@@ -1201,9 +1201,8 @@
     </div>
 
     <div class="about-image">
-        
-        <img src="Team US.jpeg" alt="Team collaboration">
-    </div>
+    <img src="{{ url_for('static', filename='Team US.jpeg') }}" alt="Team collaboration">
+</div>
 </div>
 
 <style>

@@ -162,17 +162,24 @@
             <label>Description</label>
             <textarea placeholder="Tell us what happened..."></textarea>
         </div>
-        <button class="submit-btn" onclick="alert('Grievance Submitted Anonymously!')">Submit Report</button>
+        <button class="submit-btn" onclick="submitComplaint()">Submit Report</button>
     </section>
 
-    <section id="heatmap">
-        <h2>Campus Complaint Heatmap</h2>
-        <p style="margin-bottom: 15px;">Visualizing high-complaint zones to alert campus security and administration.</p>
-        <div class="heatmap-box">
-            <div class="heat-circle" style="width: 150px; height: 150px; top: 20%; left: 30%;"></div>
-            <div class="heat-circle" style="width: 100px; height: 100px; bottom: 10%; right: 20%; background: rgba(245, 158, 11, 0.4);"></div>
-            <p><strong>[Live Map Integration: Area A - High Safety Reports]</strong></p>
-        </div>
+<section id="heatmap">
+    <h2>Campus Complaint Heatmap</h2>
+    <p style="margin-bottom: 15px;">Visualizing high-complaint zones to alert campus security and administration.</p>
+    
+    <div class="heatmap-container" style="width: 100%; height: 500px; border-radius: 15px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+        <iframe 
+            src="/get_map"
+            width="100%" 
+            height="100%" 
+            frameborder="0" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy">
+        </iframe>
+    </div>
     </section>
 
     <section id="reviews">
@@ -192,6 +199,98 @@
     </section>
 
     <script>
+        let currentLat = null;
+    let currentLng = null;
+
+    async function submitComplaint() {
+    const category = document.querySelector('#complaint select').value;
+    const description = document.querySelector('#complaint textarea').value;
+
+    
+    const urlParams = new URLSearchParams(document.getElementById('map-frame').src.split('?')[1]);
+    const lat = urlParams.get('lat');
+    const lng = urlParams.get('lng');
+
+    if (!description) {
+        alert("Please provide a description.");
+        return;
+    }
+
+    if (!lat || !lng) {
+        alert("Location access is required to submit a campus report.");
+        return;
+    }
+
+    
+    try {
+        const response = await fetch('/report_complaint', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lat: parseFloat(lat),
+                lng: parseFloat(lng),
+                category: category,
+                description: description
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+            alert("✅ Success! Your report has been logged and the heatmap updated.");
+            
+            document.getElementById('map-frame').contentWindow.location.reload();
+            
+            document.querySelector('#complaint textarea').value = "";
+        }
+    } catch (error) {
+        console.error("Error submitting complaint:", error);
+        alert("Server error. Please try again later.");
+    }
+}
+    window.onload = function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                currentLat = position.coords.latitude;
+                currentLng = position.coords.longitude;
+                
+                
+                const mapFrame = document.getElementById('map-frame');
+                if (mapFrame) {
+                    mapFrame.src = `/get_map?lat=${currentLat}&lng=${currentLng}`;
+                }
+            });
+        }
+    };
+
+    
+    async function submitComplaint() {
+        const category = document.querySelector('#complaint select').value;
+        const description = document.querySelector('#complaint textarea').value;
+
+        if (!currentLat || !currentLng) {
+            alert("Please enable location services to lodge a complaint.");
+            return;
+        }
+
+        const response = await fetch('/report_complaint', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lat: currentLat,
+                lng: currentLng,
+                category: category,
+                description: description
+            })
+        });
+
+        const result = await response.json();
+        if (result.status === "success") {
+            alert("Grievance Submitted Anonymously! Your map will update shortly.");
+            // Reload the iframe to show the new heatmap point
+            document.getElementById('map-frame').contentWindow.location.reload();
+        }
+    }
         function updateInstitute() {
             const dropdown = document.getElementById('institute-dropdown');
             const section = document.getElementById('institute-section');
@@ -215,6 +314,25 @@
                 alert("SUCCESS: SOS Active. Help is on the way. Stay in a well-lit area.");
             }
         }
+            window.onload = function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                // 2. Find the iframe and update its source with coordinates
+                const mapFrame = document.getElementById('map-frame');
+                if (mapFrame) {
+                    // This sends the lat/lng to your Python @app.route('/get_map')
+                    mapFrame.src = `/get_map?lat=${lat}&lng=${lng}`;
+                }
+                
+                console.log("Location sent to Flask:", lat, lng);
+            }, function(error) {
+                console.warn("Location access denied. Showing default map view.");
+            });
+        }
+    };
     </script>
 </body>
 </html>

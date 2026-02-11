@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>see location to find</title>
+</head>
+<body>
+    <h1> Heat Maps for complaints</h1>
+    <button onclick="sendLocation()">Report Zone</button>
+    
+    <div id="map-container">
+    <iframe id="mapFrame" 
+            src="/get_map" 
+            allow="geolocation" 
+            width="100%" 
+            height="500px" 
+            style="border:none;">
+    </iframe>
+</div>
+
+    <script>
+function sendLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+
+            fetch('/report_complaint', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ lat: lat, lng: lng })
+            }).then(() => {
+                // Pass the NEW lat/lng to the map so it centers on the user
+                const mapFrame = document.getElementById('mapFrame');
+                mapFrame.src = `/get_map?lat=${lat}&lng=${lng}&v=${new Date().getTime()}`;
+                
+                alert("Area reported successfully!");
+            });
+        }, (err) => {
+            console.error(err);
+            alert("Please enable location services in your browser settings.");
+        });
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+</script>
+<script src="map.js"></script>
+</body>
+</html>
